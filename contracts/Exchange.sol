@@ -12,6 +12,7 @@ contract Exchange {
     mapping(uint256 => _Order)public orders;
     uint256 public orderCount;
     mapping(uint256 => bool) public orderCancelled;
+    mapping(uint256 => bool) public orderFilled;
 
     event Deposit(
         address token, 
@@ -44,6 +45,17 @@ contract Exchange {
         uint256 amountGet,
         address tokenGive,
         uint256 amountGive,
+        uint256 timestamp
+    );
+
+    event Trade(
+        uint256 id,
+        address user,
+        address tokenGet,
+        uint256 amountGet,
+        address tokenGive,
+        uint256 amountGive,
+        address creator,
         uint256 timestamp
     );
     
@@ -110,7 +122,7 @@ contract Exchange {
 
         require(balanceOf(_tokenGive, msg.sender) >= _amountGive);    
         
-        orderCount = orderCount + 1;
+        orderCount ++;
 
         orders[orderCount] = _Order(
             orderCount,
@@ -158,6 +170,12 @@ contract Exchange {
     // Executing Order
 
     function fillOrder(uint256 _id) public {
+        // 1. Must be valid orderId
+        require(_id > 0 && _id <= orderCount, "Order does not exist");
+        // 2. Order can't be filled
+        require(!orderFilled[_id]);
+        // 3. Order can't be cancelled
+        require(!orderCancelled[_id]);
         // Fetch order
         _Order storage _order = orders[_id];
 
@@ -170,6 +188,9 @@ contract Exchange {
             _order.tokenGive, 
             _order.amountGive
             );
+        
+        // Mark ordr as filled
+        orderFilled[_order.id] = true;
     }
 
     function _trade(
@@ -193,6 +214,15 @@ contract Exchange {
             tokens[_tokenGive][_user] -= _amountGive;
             tokens[_tokenGive][msg.sender] += _amountGive;
 
-             
+        emit Trade(
+            _orderId,
+            msg.sender,
+            _tokenGet,
+            _amountGet,
+            _tokenGive,
+            _amountGive,
+            _user,
+            block.timestamp
+        );
     }
 } 
