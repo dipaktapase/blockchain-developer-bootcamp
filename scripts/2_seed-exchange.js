@@ -1,5 +1,4 @@
 const { ethers } = require("hardhat");
-const { method } = require("lodash");
 const config = require("../src/config.json")
 
 
@@ -47,7 +46,7 @@ async function main() {
   // Set up exchange users
   const user1 = accounts[0]
   const user2 = accounts[1]
-  amount = tokens(1000)
+  amount = tokens(10000)
 
   // User1 approves 10,000 Dapp...
   transaction = await DApp.connect(user1).approve(exchange.address, amount)
@@ -119,7 +118,7 @@ async function main() {
   await wait(1)
 
   // User1 makes a final order
-  transaction = await exchange.connect(user1).makeOrder(mETH.address, tokens(50), DApp.address, tokens(15))
+  transaction = await exchange.connect(user1).makeOrder(mETH.address, tokens(200), DApp.address, tokens(15))
   result = await transaction.wait()
   console.log(`Make order from ${user1.address}`)
 
@@ -158,7 +157,9 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+main()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
